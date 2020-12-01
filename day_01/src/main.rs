@@ -2,9 +2,9 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-fn main() {
+fn read_number_list(filename: String) -> Vec<u32> {
     // open file
-    let path = Path::new("input");
+    let path = Path::new(&filename);
     let path_display = path.display();
     let mut file = match File::open(&path) {
         Err(why) => panic!("could not open {}: {}", path_display, why),
@@ -33,6 +33,12 @@ fn main() {
         //println!("number_str: {}\n", number_str);
     }
 
+    all_numbers
+}
+
+fn main() {
+    let filename = String::from("./src/input");
+    let all_numbers = read_number_list(filename);
     println!("all_numbers: {:?}", all_numbers);
 
     // find those two with sum of 2020

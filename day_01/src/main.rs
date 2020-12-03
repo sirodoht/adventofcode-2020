@@ -1,6 +1,6 @@
 use std::fs::File;
-use std::io::prelude::*;
 use std::path::Path;
+use std::io::Read;
 
 fn read_number_list(filename: String) -> Vec<u32> {
     // open file

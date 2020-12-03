@@ -1,6 +1,6 @@
 use std::fs::File;
-use std::path::Path;
 use std::io::Read;
+use std::path::Path;
 
 fn read_number_list(filename: String) -> Vec<u32> {
     // open file
@@ -70,7 +70,10 @@ fn main() {
                     continue;
                 }
                 if value_a + value_b + value_c == 2020 {
-                    println!("value_a: {}, value_b: {}, value_c: {}", value_a, value_b, value_c);
+                    println!(
+                        "value_a: {}, value_b: {}, value_c: {}",
+                        value_a, value_b, value_c
+                    );
                     sum_entries[0] = *value_a;
                     sum_entries[1] = *value_b;
                     sum_entries[2] = *value_c;

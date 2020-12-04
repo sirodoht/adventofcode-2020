@@ -62,11 +62,8 @@ fn get_tree_collisions(map: &[Vec<bool>], right: usize, down: usize) -> u32 {
             trees_count += 1;
         }
 
-        current_col += right;
-        if current_col >= line.len() {
-            // faking copying map to the right eternally
-            current_col -= line.len()
-        }
+        // fake copying map to the right eternally with modulus
+        current_col = (current_col + right) % line.len();
 
         current_row += down;
 

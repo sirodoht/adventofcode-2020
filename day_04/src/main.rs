@@ -101,16 +101,10 @@ impl Passport {
                         return false;
                     }
 
-                    let color_decimal =
-                        match u32::from_str_radix(&color_chars.iter().collect::<String>(), 16) {
-                            Ok(number) => number,
-                            Err(_) => return false,
-                        };
-
-                    // highest color number = #ffffff, decimal eqivalent
-                    if color_decimal > 16_777_215 {
-                        return false;
-                    }
+                    match u32::from_str_radix(&color_chars.iter().collect::<String>(), 16) {
+                        Ok(number) => number,
+                        Err(_) => return false,
+                    };
                 }
             }
             None => return false,

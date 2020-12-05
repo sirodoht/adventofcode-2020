@@ -128,13 +128,7 @@ impl Passport {
                     return false;
                 }
                 match pid.parse::<u64>() {
-                    Ok(number) => {
-                        if number >= 1_000_000_000 {
-                            return false;
-                        } else {
-                            number
-                        }
-                    }
+                    Ok(_) => (),
                     Err(_) => return false,
                 };
             }

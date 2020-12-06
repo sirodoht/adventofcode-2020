@@ -61,6 +61,8 @@ fn main() {
         questions.push(hs);
     }
 
+    // flatmap nested vec/hashset and reduce/fold everything into an accumulator
+    // with each question counting as 1
     let sum: u32 = questions
         .iter()
         .flat_map(|x| x.iter())
@@ -72,13 +74,17 @@ fn main() {
     let mut everyone_count = 0;
     let forms = read_forms(&filename);
     for group in &forms {
+        // create mapping of group per question
         let mut group_mapping = HashMap::new();
         for person in group {
-            for answer in person.chars() {
-                *group_mapping.entry(answer).or_insert(0) += 1;
+            for question in person.chars() {
+                *group_mapping.entry(question).or_insert(0) += 1;
             }
         }
 
+        // for every question of every group,
+        // if there are as many as the number of total group members
+        // then everyone has answered this question
         for (_, value) in group_mapping {
             if group.len() == value as usize {
                 everyone_count += 1;

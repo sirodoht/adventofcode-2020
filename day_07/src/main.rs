@@ -86,15 +86,15 @@ fn process_shiny_gold_belonging(bags: &[Bag]) -> u32 {
     }
 
     let mut color_set = HashSet::new();
-    let mut queue: Vec<String> = vec!["shiny gold".to_string()];
+    let mut queue: Vec<&str> = vec!["shiny gold"];
     while !queue.is_empty() {
         let item = queue.pop().unwrap();
-        if !rev_rules.contains_key(&item) {
+        if !rev_rules.contains_key(item) {
             continue;
         }
-        for color in &rev_rules[&item.to_string()] {
+        for color in &rev_rules[item] {
             color_set.insert(color);
-            queue.push(color.to_string());
+            queue.push(color);
         }
     }
 

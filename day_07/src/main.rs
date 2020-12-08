@@ -4,19 +4,10 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-#[derive(Debug)]
-struct Rule {
-    color: String,
-    size: u32,
-}
+type RuleMapContains = HashMap<String, Vec<(String, u32)>>;
+type RuleMapBelongs = HashMap<String, Vec<String>>;
 
-#[derive(Debug)]
-struct Bag {
-    color: String,
-    rules: Vec<Rule>,
-}
-
-fn parse_rules(filename: &str) -> Vec<Bag> {
+fn parse_rules(filename: &str) -> (RuleMapContains, RuleMapBelongs) {
     // open file
     let path = Path::new(filename);
     let path_display = path.display();
@@ -32,67 +23,48 @@ fn parse_rules(filename: &str) -> Vec<Bag> {
     }
 
     // transform into a vec of strings
-    let mut lines: Vec<String> = content.split('\n').map(|x| x.to_string()).collect();
+    let mut lines: Vec<&str> = content.split('\n').collect();
     lines.pop(); // pop last empty line
 
-    // transform into a Vec<Bag>
-    let mut bags: Vec<Bag> = vec![];
+    // transform into hashmaps
+    let mut rule_map_contains: RuleMapContains = HashMap::new();
+    let mut rule_map_belongs: RuleMapBelongs = HashMap::new();
     for l in lines {
-        let parts = l
-            .split(" bags contain ")
-            .map(|x| x.to_string())
-            .collect::<Vec<String>>();
-
-        // get bag color
+        let parts: Vec<&str> = l.split(" bags contain ").collect();
         let color = parts[0].to_string();
-        let rules: Vec<Rule> = vec![];
-        let mut new_bag = Bag { color, rules };
+        let rules = parts[1];
 
-        let rules = parts[1].to_string();
-
-        // end processing if rules is 0
         if rules == "no other bags." {
-            bags.push(new_bag);
+            rule_map_contains.insert(color, vec![]);
             continue;
         }
 
-        // process non-zero bag rules
         let rules = rules.split(", ").collect::<Vec<&str>>();
-        let mut new_rules: Vec<Rule> = vec![];
         for r in rules {
-            let parts = r.split(' ').collect::<Vec<&str>>();
-            let size = parts[0].parse().unwrap();
-            let color = (parts[1].to_owned() + " " + parts[2]).to_string();
-            let new_rule = Rule { color, size };
-            new_rules.push(new_rule);
+            // build rule_map_contains
+            let r_parts = r.split(' ').collect::<Vec<&str>>();
+            let r_size: u32 = r_parts[0].parse().unwrap();
+            let r_color = (r_parts[1].to_owned() + " " + r_parts[2]).to_string();
+            let new_rule = (r_color.clone(), r_size);
+            rule_map_contains.entry(color.clone()).or_insert(vec![]).push(new_rule);
+
+            // build rule_map_belongs
+            rule_map_belongs.entry(r_color.clone()).or_insert(vec![]).push(color.clone());
         }
-        new_bag.rules = new_rules;
-
-        bags.push(new_bag);
     }
-
-    bags
+    
+    (rule_map_contains, rule_map_belongs)
 }
 
-fn process_shiny_gold_belonging(bags: &[Bag]) -> u32 {
-    let mut rev_rules = HashMap::new();
-    for b in bags {
-        for r in &b.rules {
-            rev_rules
-                .entry(r.color.clone())
-                .or_insert(vec![])
-                .push(b.color.clone());
-        }
-    }
-
+fn process_shiny_gold_belonging(rule_map: &RuleMapBelongs) -> u32 {
     let mut color_set = HashSet::new();
     let mut queue: Vec<&str> = vec!["shiny gold"];
     while !queue.is_empty() {
         let item = queue.pop().unwrap();
-        if !rev_rules.contains_key(item) {
+        if !rule_map.contains_key(item) {
             continue;
         }
-        for color in &rev_rules[item] {
+        for color in &rule_map[item] {
             color_set.insert(color);
             queue.push(color);
         }
@@ -101,37 +73,37 @@ fn process_shiny_gold_belonging(bags: &[Bag]) -> u32 {
     color_set.len() as u32
 }
 
-fn get_count(bags: &[Bag], color: &str) -> u32 {
-    let mut acc: u32 = 0;
-    for b in bags {
-        if b.color == color {
-            if b.rules.is_empty() {
+fn get_count(rule_map: &RuleMapContains, color: &str) -> u32 {
+    let mut count: u32 = 0;
+    for (key, value) in rule_map {
+        if key == color {
+            if value.is_empty() {
                 return 1;
             } else {
-                for r in &b.rules {
-                    acc += r.size * get_count(bags, &r.color);
+                for (inner_color, inner_size) in value {
+                    count += inner_size * get_count(rule_map, inner_color);
                 }
             }
             break;
         }
     }
 
-    acc + 1
+    count + 1
 }
 
-fn process_shiny_gold_count(bags: &[Bag]) -> u32 {
-    get_count(bags, "shiny gold") - 1
+fn process_shiny_gold_count(rules: &RuleMapContains) -> u32 {
+    get_count(rules, "shiny gold") - 1
 }
 
 fn main() {
     let filename = String::from("./src/input");
-    let bags = parse_rules(&filename);
+    let (rule_map_contains, rule_map_belongs) = parse_rules(&filename);
 
-    let result = process_shiny_gold_belonging(&bags);
+    let result = process_shiny_gold_belonging(&rule_map_belongs);
     println!("==result==");
     println!("{}", result);
 
-    let result = process_shiny_gold_count(&bags);
+    let result = process_shiny_gold_count(&rule_map_contains);
     println!("==result part two==");
     println!("{}", result);
 }

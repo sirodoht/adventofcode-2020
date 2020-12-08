@@ -41,32 +41,44 @@ fn parse_rules(filename: &str) -> (RuleMapContains, RuleMapBelongs) {
 
         let rules = rules.split(", ").collect::<Vec<&str>>();
         for r in rules {
-            // build rule_map_contains
             let r_parts = r.split(' ').collect::<Vec<&str>>();
             let r_size: u32 = r_parts[0].parse().unwrap();
             let r_color = (r_parts[1].to_owned() + " " + r_parts[2]).to_string();
+
+            // build rule_map_contains
             let new_rule = (r_color.clone(), r_size);
-            rule_map_contains.entry(color.clone()).or_insert(vec![]).push(new_rule);
+            rule_map_contains
+                .entry(color.clone())
+                .or_insert(vec![])
+                .push(new_rule);
 
             // build rule_map_belongs
-            rule_map_belongs.entry(r_color.clone()).or_insert(vec![]).push(color.clone());
+            rule_map_belongs
+                .entry(r_color.clone())
+                .or_insert(vec![])
+                .push(color.clone());
         }
     }
-    
+
     (rule_map_contains, rule_map_belongs)
 }
 
 fn process_shiny_gold_belonging(rule_map: &RuleMapBelongs) -> u32 {
     let mut color_set = HashSet::new();
     let mut queue: Vec<&str> = vec!["shiny gold"];
+
+    // while there are things to process
     while !queue.is_empty() {
-        let item = queue.pop().unwrap();
+        let item = queue.pop().unwrap(); // take one item (color string)
         if !rule_map.contains_key(item) {
+            // if it doesn't belong to any other bag, continue to the next
             continue;
         }
+
+        // find where it belongs
         for color in &rule_map[item] {
-            color_set.insert(color);
-            queue.push(color);
+            color_set.insert(color); // keep track of it
+            queue.push(color); // queue it to be processed for its own belongings
         }
     }
 
@@ -75,12 +87,14 @@ fn process_shiny_gold_belonging(rule_map: &RuleMapBelongs) -> u32 {
 
 fn get_count(rule_map: &RuleMapContains, color: &str) -> u32 {
     let mut count: u32 = 0;
+
     for (key, value) in rule_map {
         if key == color {
             if value.is_empty() {
                 return 1;
             } else {
                 for (inner_color, inner_size) in value {
+                    // count all bags multiplied by the number of bags they contain
                     count += inner_size * get_count(rule_map, inner_color);
                 }
             }
@@ -88,10 +102,12 @@ fn get_count(rule_map: &RuleMapContains, color: &str) -> u32 {
         }
     }
 
+    // +1 for the bag that contains all the sub-bags
     count + 1
 }
 
 fn process_shiny_gold_count(rules: &RuleMapContains) -> u32 {
+    // -1 for the initial bag "shiny gold"
     get_count(rules, "shiny gold") - 1
 }
 
